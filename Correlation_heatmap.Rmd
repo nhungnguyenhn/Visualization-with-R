@@ -1,0 +1,357 @@
+---
+title: "Correlation_heatmap"
+output: html_document
+date: "2024-09-02"
+---
+
+Heatmap: https://r-graph-gallery.com/heatmap.html
+
+
+```{r}
+
+# Define APA theme
+theme_apa <- function(base_size = 12, base_family = "serif") {
+  theme_classic(base_size = base_size, base_family = base_family) +
+    theme(
+      # Title and subtitle
+      plot.title = element_text(face = "bold", size = base_size * 1.2, hjust = 0.5),
+      plot.subtitle = element_text(size = base_size, hjust = 0.5),
+      
+      # Axis titles and text
+      axis.title = element_text(size = base_size * 1.1),
+      axis.text = element_text(size = base_size),
+      axis.line = element_line(color = "black"),
+      axis.ticks = element_line(color = "black"),
+      
+      # Panel and background
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      
+      # Legend
+      legend.title = element_text(size = base_size),
+      legend.text = element_text(size = base_size),
+      legend.position = "bottom",
+      legend.key = element_blank()
+    )
+}
+```
+
+## Dendrogram and Reordering
+```{r}
+library(ggplot2)
+# The mtcars dataset:
+data <- as.matrix(mtcars)
+
+# Default Heatmap
+heatmap(data)
+
+# Use 'scale' to normalize
+heatmap(data, scale="column")
+
+# No dendrogram nor reordering for neither column or row
+heatmap(data, Colv = NA, Rowv = NA, scale="column") +  
+  
+  theme_apa()
+```
+
+## Color palette
+
+```{r}
+# 1: native palette from R
+heatmap(data, scale="column", col = cm.colors(256))  + theme_apa()
+heatmap(data, scale="column", col = terrain.colors(256))  + theme_apa()
+ 
+# 2: Rcolorbrewer palette
+library(RColorBrewer)
+coul <- colorRampPalette(brewer.pal(8, "PiYG"))(25)
+heatmap(data, scale="column", col = coul) + theme_apa()
+```
+
+
+# Custom Layout
+
+```{r}
+# Add classic arguments like main title and axis title
+heatmap(data, Colv = NA, Rowv = NA, scale="column", col = coul, xlab="variable", ylab="car", main="heatmap")
+ 
+# Custom x and y labels with cexRow and labRow (col respectively)
+heatmap(data, scale="column", cexRow=1.5, labRow=paste("new_", rownames(data),sep=""), col= colorRampPalette(brewer.pal(8, "Blues"))(25))
+```
+
+## Add color beside heatmap
+
+```{r}
+# Example: grouping from the first letter:
+my_group <- as.numeric(as.factor(substr(rownames(data), 1 , 1)))
+colSide <- brewer.pal(9, "Set1")[my_group]
+colMain <- colorRampPalette(brewer.pal(8, "Blues"))(25)
+heatmap(data, Colv = NA, Rowv = NA, scale="column" , RowSideColors=colSide, col=colMain   )
+```
+
+## Using geom_tile() from ggplot2
+
+```{r}
+# Library
+library(ggplot2)
+
+# Dummy data
+x <- LETTERS[1:20]
+y <- paste0("var", seq(1,20))
+data <- expand.grid(X=x, Y=y)
+data$Z <- runif(400, 0, 5)
+ 
+# Heatmap 
+ggplot(data, aes(X, Y, fill= Z)) + 
+  geom_tile()
+```
+
+# use color palettes: 
+
+```{r}
+# Library
+library(ggplot2)
+library(hrbrthemes)
+
+# Dummy data
+x <- LETTERS[1:20]
+y <- paste0("var", seq(1,20))
+data <- expand.grid(X=x, Y=y)
+data$Z <- runif(400, 0, 5)
+ 
+# Give extreme colors:
+ggplot(data, aes(X, Y, fill= Z)) + 
+  geom_tile() +
+  scale_fill_gradient(low="white", high="blue") +
+  theme_ipsum()
+
+# Color Brewer palette
+ggplot(data, aes(X, Y, fill= Z)) + 
+  geom_tile() +
+  scale_fill_distiller(palette = "RdPu") +
+  theme_ipsum()
+
+# Color Brewer palette
+library(viridis)
+ggplot(data, aes(X, Y, fill= Z)) + 
+  geom_tile() +
+  scale_fill_viridis(discrete=FALSE) +
+  theme_ipsum()
+```
+## From wide input format
+
+```{r}
+# Library
+library(ggplot2)
+library(tidyr)
+library(tibble)
+library(hrbrthemes)
+library(dplyr)
+
+# Volcano dataset
+#volcano
+
+# Heatmap 
+volcano %>%
+  
+  # Data wrangling
+  as_tibble() %>%
+  rowid_to_column(var="X") %>%
+  gather(key="Y", value="Z", -1) %>%
+  
+  # Change Y to numeric
+  mutate(Y=as.numeric(gsub("V","",Y))) %>%
+
+  # Viz
+  ggplot(aes(X, Y, fill= Z)) + 
+    geom_tile() +
+    theme_ipsum() +
+    theme(legend.position="none")
+```
+
+## Turn it interactive with plotly
+
+```{r}
+# Library
+library(ggplot2)
+library(hrbrthemes)
+library(plotly)
+
+# Dummy data
+x <- LETTERS[1:20]
+y <- paste0("var", seq(1,20))
+data <- expand.grid(X=x, Y=y)
+data$Z <- runif(400, 0, 5)
+ 
+# new column: text for tooltip:
+data <- data %>%
+  mutate(text = paste0("x: ", x, "\n", "y: ", y, "\n", "Value: ",round(Z,2), "\n", "What else?"))
+
+# classic ggplot, with text in aes
+p <- ggplot(data, aes(X, Y, fill= Z, text=text)) + 
+  geom_tile() +
+  theme_ipsum()
+
+ggplotly(p, tooltip="text")
+
+# save the widget
+# library(htmlwidgets)
+# saveWidget(pp, file=paste0( getwd(), "/HtmlWidget/ggplotlyHeatmap.html"))
+```
+
+
+## Interactive heatmaps from R: https://www.data-to-viz.com/graph/heatmap.html
+
+## Interactive heatmaps from time series 
+
+
+
+```{r}
+# Load required libraries
+library(ggplot2)
+library(dplyr) # easier data wrangling 
+library(viridis) # colour blind friendly palette, works in B&W also
+library(lubridate) # for easy date manipulation
+library(ggExtra) # for additional ggplot theme options
+library(tidyr) 
+
+# Simulate a similar dataset (since Interpol.T is no longer available)
+set.seed(123)
+# Create a sample dataset
+df <- data.frame(
+  stationid = rep("T0001", 24 * 365),
+  date = rep(seq.Date(from = as.Date("2023-01-01"), to = as.Date("2023-12-31"), by = "day"), each = 24),
+  hour = rep(0:23, 365),
+  temp = rnorm(24 * 365, mean = 10, sd = 5)
+)
+
+# Clean up the data
+df <- df %>%
+  mutate(
+    year = year(date),
+    month = month(date, label = TRUE),
+    day = day(date)
+  )
+
+# Fill missing temperature values (for demonstration)
+df <- df %>%
+  fill(temp)
+
+# Plotting starts here
+p <- ggplot(df, aes(day, hour, fill = temp)) +
+  geom_tile(color = "white", size = 0.1) + 
+  scale_fill_viridis(name = "Hrly Temps C", option = "C") +
+  facet_grid(year ~ month) +
+  scale_y_continuous(trans = "reverse", breaks = unique(df$hour)) +
+  scale_x_continuous(breaks = c(1, 10, 20, 31)) +
+  theme_minimal(base_size = 8) +
+  labs(title = paste("Hourly Temps - Station", unique(df$stationid)), x = "Day", y = "Hour Commencing") +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(size = 14, hjust = 0),
+    axis.text.y = element_text(size = 6),
+    strip.background = element_rect(colour = "white"),
+    axis.ticks = element_blank(),
+    axis.text = element_text(size = 7),
+    legend.title = element_text(size = 8),
+    legend.text = element_text(size = 6)
+  ) +
+  removeGrid()  # from ggExtra
+
+# Display the plot
+p
+
+```
+Note: https://r-graph-gallery.com/283-the-hourly-heatmap.html packages interpol.T is removed from cran, so the code was adjusted 
+
+## Using the levelplot() function of lattice
+```{r}
+# Load the lattice package
+library("lattice")
+ 
+# Dummy data
+x <- seq(1,10, length.out=20)
+y <- seq(1,10, length.out=20)
+data <- expand.grid(X=x, Y=y)
+data$Z <- runif(400, 0, 5)
+
+## Try it out
+levelplot(Z ~ X*Y, data=data  ,xlab="X",
+          main="")
+```
+
+
+## From wide input matrix
+
+```{r}
+# Load the library
+library("lattice")
+ 
+# Dummy data
+data <- matrix(runif(100, 0, 5) , 10 , 10)
+colnames(data) <- letters[c(1:10)]
+rownames(data) <- paste( rep("row",10) , c(1:10) , sep=" ")
+ 
+# plot it flipping the axis
+levelplot(data)
+```
+
+#Flip and reorder axis
+
+```{r}
+# Load the library
+library("lattice")
+ 
+# Dummy data
+data <- matrix(runif(100, 0, 5) , 10 , 10)
+colnames(data) <- letters[c(1:10)]
+rownames(data) <- paste( rep("row",10) , c(1:10) , sep=" ")
+ 
+# plot it flipping the axis
+levelplot( t(data[c(nrow(data):1) , ]),
+           col.regions=heat.colors(100))
+```
+
+## Custom colors
+
+```{r}
+# Lattice package
+require(lattice)
+
+# The volcano dataset is provided, it looks like that:
+#head(volcano)
+
+# 1: native palette from R
+levelplot(volcano, col.regions = terrain.colors(100)) # try cm.colors() or terrain.colors()
+
+# 2: Rcolorbrewer palette
+library(RColorBrewer)
+coul <- colorRampPalette(brewer.pal(8, "PiYG"))(25)
+levelplot(volcano, col.regions = coul) # try cm.colors() or terrain.colors()
+
+# 3: Viridis
+library(viridisLite)
+coul <- viridis(100)
+levelplot(volcano, col.regions = coul) 
+#levelplot(volcano, col.regions = magma(100)) 
+```
+#Heatmap with smoothing - LatticeExtra
+
+```{r}
+# library
+library(latticeExtra) 
+ 
+# create data
+set.seed(1) 
+data <- data.frame(x = rnorm(100), y = rnorm(100)) 
+data$z <- with(data, x * y + rnorm(100, sd = 1)) 
+ 
+# showing data points on the same color scale 
+levelplot(z ~ x * y, data, 
+          panel = panel.levelplot.points, cex = 1.2
+    ) + 
+    layer_(panel.2dsmoother(..., n = 200))
+
+
+```
+
