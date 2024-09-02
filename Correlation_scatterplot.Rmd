@@ -1,0 +1,379 @@
+---
+title: "Correlation_scatterplot"
+output: html_document
+date: "2024-08-31"
+---
+
+Scatter Plot: https://r-graph-gallery.com/scatterplot.html
+
+```{r}
+
+# Define APA theme
+theme_apa <- function(base_size = 12, base_family = "serif") {
+  theme_classic(base_size = base_size, base_family = base_family) +
+    theme(
+      # Title and subtitle
+      plot.title = element_text(face = "bold", size = base_size * 1.2, hjust = 0.5),
+      plot.subtitle = element_text(size = base_size, hjust = 0.5),
+      
+      # Axis titles and text
+      axis.title = element_text(size = base_size * 1.1),
+      axis.text = element_text(size = base_size),
+      axis.line = element_line(color = "black"),
+      axis.ticks = element_line(color = "black"),
+      
+      # Panel and background
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      
+      # Legend
+      legend.title = element_text(size = base_size),
+      legend.text = element_text(size = base_size),
+      legend.position = "bottom",
+      legend.key = element_blank()
+    )
+}
+```
+
+
+##Basic scatterplot with R and ggplot2
+
+```{r}
+
+
+# library
+library(ggplot2)
+ 
+# The iris dataset is provided natively by R
+#head(iris)
+ 
+# basic scatterplot
+ggplot(iris, aes(x=Sepal.Length, y=Sepal.Width)) + 
+    geom_point() +theme_apa()
+
+
+```
+
+
+
+##Custom scatterplot
+
+```{r}
+
+
+# library
+library(ggplot2)
+ 
+# Iris dataset is natively provided by R
+#head(iris)
+ 
+# use options!
+ggplot(iris, aes(x=Sepal.Length, y=Sepal.Width)) + 
+    geom_point(
+        color="orange",
+        fill="#69b3a2",
+        shape=21,
+        alpha=0.5,
+        size=6,
+        stroke = 2
+        ) +theme_apa()
+
+```
+##Using theme_ipsum
+
+```{r}
+
+
+# library
+library(ggplot2)
+library(hrbrthemes)
+
+# Iris dataset is natively provided by R
+#head(iris)
+ 
+# use options!
+ggplot(iris, aes(x=Sepal.Length, y=Sepal.Width)) + 
+    geom_point(
+        color="black",
+        fill="#69b3a2",
+        shape=22,
+        alpha=0.5,
+        size=6,
+        stroke = 1
+        ) +
+    theme_ipsum() +theme_apa()
+
+```
+
+##aesthetics
+
+```{r}
+library(ggplot2)
+# Transparency
+ggplot(iris, aes(x=Sepal.Length, y=Sepal.Width, alpha=Species)) + 
+    geom_point(size=6, color="#69b3a2") +
+    ggtitle("Transparency") +
+    theme_apa()
+
+# Shape
+ggplot(iris, aes(x=Sepal.Length, y=Sepal.Width, shape=Species)) + 
+    geom_point(size=6, color="lightblue") +
+    ggtitle("Shape") +
+    theme_apa()
+
+# Size
+ggplot(iris, aes(x=Sepal.Length, y=Sepal.Width, size=Petal.Width)) + 
+    geom_point(color="darkred") +
+    ggtitle("Size") +
+     theme_apa()
+```
+
+
+##Mapping to several features
+
+```{r}
+# load ggplot2
+library(ggplot2)
+library(hrbrthemes)
+
+# A basic scatterplot with color depending on Species
+ggplot(iris, aes(x=Sepal.Length, y=Sepal.Width, 
+                 shape=Species, 
+                 alpha=Species, 
+                 size=Species, 
+                 color=Species)) + 
+    geom_point() +
+    theme_ipsum()
+```
+##  text labels with ggplot2
+
+```{r}
+
+
+# library
+library(ggplot2)
+ 
+# Keep 30 first rows in the mtcars natively available dataset
+data=head(mtcars, 30)
+ 
+# 1/ add text with geom_text, use nudge to nudge the text
+ggplot(data, aes(x=wt, y=mpg)) +
+  geom_point() + # Show dots
+  geom_text(
+    label=rownames(data), 
+    nudge_x = 0.25, nudge_y = 0.25, 
+    check_overlap = T
+  )
+
+
+```
+
+##Add labels with geom_label()
+
+```{r}
+
+
+# library
+library(ggplot2)
+ 
+# Keep 30 first rows in the mtcars natively available dataset
+data=head(mtcars, 30)
+ 
+# 1/ add text with geom_text, use nudge to nudge the text
+ggplot(data, aes(x=wt, y=mpg)) +
+  geom_point() + # Show dots
+  geom_label(
+    label=rownames(data), 
+    nudge_x = 0.25, nudge_y = 0.25, 
+    check_overlap = T
+  )
+
+
+```
+
+##Add one text label only
+
+
+```{r}
+# Keep 30 first rows in the mtcars natively available dataset
+data=head(mtcars, 30)
+ 
+# Add one annotation
+ggplot(data, aes(x=wt, y=mpg)) +
+  geom_point() + # Show dots
+  geom_label(
+    label="This point", 
+    x=4.1,
+    y=20,
+    label.padding = unit(0.55, "lines"), # Rectangle size around label
+    label.size = 0.35,
+    color = "red",
+    fill="#69b3a2"
+  ) +theme_apa()
+```
+
+## Add labels for a selection of marker
+
+
+```{r}
+
+
+# library
+library(ggplot2)
+library(dplyr)
+library(tibble)
+
+# Keep 30 first rows in the mtcars natively available dataset
+data=head(mtcars, 30)
+
+# Change data rownames as a real column called 'carName'
+data <- data %>%
+  rownames_to_column(var="carName")
+  
+# Plot
+ggplot(data, aes(x=wt, y=mpg)) +
+  geom_point() + 
+  geom_label( 
+    data=data %>% filter(mpg>20 & wt>3), # Filter data first
+    aes(label=carName)
+  ) +theme_apa()
+
+
+```
+
+#Marginal distribution with ggplot2 and ggExtra
+
+```{r}
+# library
+library(ggplot2)
+library(ggExtra)
+ 
+# The mtcars dataset is proposed in R
+head(mtcars)
+ 
+# classic plot :
+p <- ggplot(mtcars, aes(x=wt, y=mpg, color=cyl, size=cyl)) +
+      geom_point() +
+      theme(legend.position="none")
+ 
+# with marginal histogram
+p1 <- ggMarginal(p, type="histogram")
+ 
+# marginal density
+p2 <- ggMarginal(p, type="density")
+ 
+# marginal boxplot
+p3 <- ggMarginal(p, type="boxplot")
+
+p
+p1
+p2
+p3
+```
+
+```{r}
+
+
+# library
+library(ggplot2)
+library(ggExtra)
+ 
+# The mtcars dataset is proposed in R
+head(mtcars)
+ 
+# classic plot :
+p <- ggplot(mtcars, aes(x=wt, y=mpg, color=cyl, size=cyl)) +
+      geom_point() +
+      theme(legend.position="none")
+ 
+# Set relative size of marginal plots (main plot 10x bigger than marginals)
+p1 <- ggMarginal(p, type="histogram", size=10)
+ 
+# Custom marginal plots:
+p2 <- ggMarginal(p, type="histogram", fill = "slateblue", xparams = list(  bins=10))
+ 
+# Show only marginal plot for x axis
+p3 <- ggMarginal(p, margins = 'x', color="purple", size=4)
+
+p
+p1
+p2
+p3
+
+```
+
+##Linear model and confidence interval
+
+```{r}
+
+
+# Library
+library(ggplot2)
+library(hrbrthemes)
+
+# Create dummy data
+data <- data.frame(
+  cond = rep(c("condition_1", "condition_2"), each=10), 
+  my_x = 1:100 + rnorm(100,sd=9), 
+  my_y = 1:100 + rnorm(100,sd=16) 
+)
+
+# Basic scatter plot.
+p1 <- ggplot(data, aes(x=my_x, y=my_y)) + 
+  geom_point( color="#69b3a2") +
+  theme_ipsum()
+ 
+# with linear trend
+p2 <- ggplot(data, aes(x=my_x, y=my_y)) +
+  geom_point() +
+  geom_smooth(method=lm , color="red", se=FALSE) +
+  theme_ipsum()
+
+# linear trend + confidence interval
+p3 <- ggplot(data, aes(x=my_x, y=my_y)) +
+  geom_point() +
+  geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE) +
+  theme_ipsum()
+
+p
+p1
+p2
+p3
+```
+##Scatter plot with trend lines and labels on top
+
+```{r}
+# Load the package
+library(ggplot2)
+library(geomtextpath)
+```
+
+
+```{r}
+library(hrbrthemes)
+data(iris)
+
+ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point() +
+  geom_labelsmooth(aes(label = 'This is the trend line'), fill = "white",
+                method = "lm", formula = y ~ x,
+                size = 6, linewidth = 2, boxlinewidth = 0.6) +
+  theme_bw() + guides(color = 'none') # remove legend
+```
+##Multiple groups trend lines with labels
+
+```{r}
+library(hrbrthemes)
+data(iris)
+
+ggplot(iris, aes(x = Sepal.Length, y = Petal.Length, color = Species)) +
+  geom_point() +
+  geom_labelsmooth(aes(label = Species), fill = "white",
+                method = "lm", formula = y ~ x,
+                size = 3, linewidth = 1, boxlinewidth = 0.4) +
+  theme_bw() + guides(color = 'none') # remove legend
+```
+
+
+### Scatterplot with based R: https://r-graph-gallery.com/scatterplot.html
