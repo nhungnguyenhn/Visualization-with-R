@@ -1,0 +1,319 @@
+---
+title: "Map"
+output: html_document
+date: "2024-08-31"
+---
+
+## Basic Map
+```{r}
+# Load the library
+library(leaflet)
+ 
+# Note: if you do not already installed it, install it with:
+# install.packages("leaflet")
+
+# Initialize the leaflet map with the leaflet() function
+m <- leaflet()
+# Then we Add default OpenStreetMap map tiles
+m <- addTiles(m)
+m
+ 
+# Same stuff but using the %>% operator
+m <- leaflet() %>% 
+  addTiles()
+m
+
+# Define the save path - using a simplified path like the desktop
+save_path <- "/Users/nguyennhung/Desktop/backgroundMapBasic.html"
+
+
+# save the widget in a html file if needed.
+ library(htmlwidgets)
+ saveWidget(m, file=save_path)
+```
+
+
+## Zoom and Location 
+
+```{r}
+# Load the library
+library(leaflet)
+
+# Note: if you do not already installed it, install it with:
+# install.packages("leaflet")
+
+# Make the map
+m <- leaflet() %>% 
+  addTiles() %>% 
+  setView( lng = 166.45, lat = -22.25, zoom = 8 )
+m
+
+# save the widget in a html file if needed.
+# library(htmlwidgets)
+# saveWidget(m, file=paste0( getwd(), "/HtmlWidget/backgroundMapZoom.html"))
+```
+
+
+```{r}
+
+
+# Load the library
+library(leaflet)
+
+# Note: if you do not already installed it, install it with:
+# install.packages("leaflet")
+
+# Background 1: NASA
+m <- leaflet() %>% 
+   addTiles() %>% 
+   setView( lng = 2.34, lat = 48.85, zoom = 5 ) %>% 
+   addProviderTiles("NASAGIBS.ViirsEarthAtNight2012")
+m
+ 
+# Background 2: World Imagery
+m <- leaflet() %>% 
+   addTiles() %>% 
+   setView( lng = 2.34, lat = 48.85, zoom = 3 ) %>% 
+   addProviderTiles("Esri.WorldImagery")
+m
+
+# save the widget in a html file if needed.
+# library(htmlwidgets)
+# saveWidget(m, file=paste0( getwd(), "/HtmlWidget/backgroundMapTile.html", width="1000px"))
+
+
+```
+
+
+## Change and customize circles and rectangles on a leaflet map
+
+```{r}
+#library
+library(leaflet)
+ 
+# Create 20 markers (Random points)
+data = data.frame(
+   long=sample(seq(-150,150),20),
+   lat=sample(seq(-50,50),20),
+   val=round(rnorm(20),2),
+   name=paste("point",letters[1:20],sep="_")
+) 
+ 
+# Show a circle at each position
+m = leaflet(data = data) %>%
+   addTiles() %>%
+   addCircleMarkers(~long, ~lat , popup = ~as.character(name))
+m
+
+# save the widget
+# library(htmlwidgets)
+# saveWidget(m, file="HtmlWidget/leaflet-182-add-circles.html", selfcontained = F)
+```
+
+## Change color and shape 
+    
+```{r}
+# Create 20 markers (Random points)
+data = data.frame(
+   long=sample(seq(-150,150),20),
+   lat=sample(seq(-50,50),20),
+   val=round(rnorm(20),2),
+   name=paste("point",letters[1:20],sep="_")
+) 
+ 
+# Show a CUSTOM circle at each position. Size defined in Pixel. Size does not change when you zoom
+m=leaflet(data = data) %>%
+   addTiles() %>%
+   addCircleMarkers(
+      ~long, ~lat, 
+      radius=~val*14 , 
+      color=~ifelse(data$val>0 , "red", "orange"),
+      stroke = TRUE, 
+      fillOpacity = 0.2,
+      popup = ~as.character(name)
+   ) 
+m
+```
+  
+  
+```{r}
+#library
+library(leaflet)
+ 
+# Create 20 markers (Random points)
+data = data.frame(
+   long=sample(seq(-150,150),20),
+   lat=sample(seq(-50,50),20),
+   val=round(rnorm(20),2),
+   name=paste("Base",letters[1:20],sep="_")
+) 
+ 
+# Show a circle at each position
+m = leaflet(data = data) %>%
+   addTiles() %>%
+   addCircleMarkers(~long, ~lat , popup = ~as.character(name))
+m
+
+# save the widget
+# library(htmlwidgets)
+# saveWidget(m, file="HtmlWidget/leaflet-182-add-circles.html", selfcontained = F)
+```
+  
+    
+## Custom circles  
+
+```{r}
+# Create 20 markers (Random points)
+data = data.frame(
+   long=sample(seq(-150,150),20),
+   lat=sample(seq(-50,50),20),
+   val=round(rnorm(20),2),
+   name=paste("Location",letters[1:20],sep="_")
+) 
+ 
+# Show a CUSTOM circle at each position. Size defined in Pixel. Size does not change when you zoom
+m=leaflet(data = data) %>%
+   addTiles() %>%
+   addCircleMarkers(
+      ~long, ~lat, 
+      radius=~val*14 , 
+      color=~ifelse(data$val>0 , "red", "orange"),
+      stroke = TRUE, 
+      fillOpacity = 0.2,
+      popup = ~as.character(name)
+   ) 
+m
+
+# save the widget
+# library(htmlwidgets)
+# saveWidget(m, file="HtmlWidget/leaflet-182-add-circles-2.html", selfcontained = F)
+```
+
+## Custom circles with size that change when you zoom
+
+```{r}
+#library
+library(leaflet)
+ 
+# Create 20 markers (Random points)
+data = data.frame(
+   long=sample(seq(-150,150),20),
+   lat=sample(seq(-50,50),20),
+   val=round(rnorm(20),2),
+   name=paste("point",letters[1:20],sep="_")
+) 
+ 
+# Show a CUSTOM circle at each position. Size in meters --> change when you zoom.
+m = leaflet(data = data) %>%
+   addTiles() %>%
+   addCircles(
+      ~long, ~lat, 
+      radius=~val*1000000 , 
+      color=~ifelse(data$val>0 , "red", "orange"),
+      stroke = TRUE, 
+      fillOpacity = 0.2,
+      popup = ~as.character(name)
+   ) %>% 
+  setView(lng = 166.45, lat = 21, zoom = 2)
+m
+
+# save the widget
+# library(htmlwidgets)
+# saveWidget(m, file="HtmlWidget/leaflet-182-add-circles-3.html", selfcontained = F)
+```
+## Add rectangles
+
+```{r}
+library(leaflet)
+ 
+# Create 20 markers (Random points)
+data = data.frame(
+   long=sample(seq(-150,150),20),
+   lat=sample(seq(-50,50),20),
+   val=round(rnorm(20),2),
+   name=paste("point",letters[1:20],sep="_")
+) 
+ 
+# Show a rectangle
+m = leaflet() %>% addTiles() %>%  
+  addRectangles(
+    lng1=-118.456554, lat1=34.078039,
+    lng2=-118.436383, lat2=34.062717,
+    fillColor = "transparent"
+  )
+m
+
+# save the widget
+# library(htmlwidgets)
+# saveWidget(m, file="HtmlWidget/leaflet-182-add-rectangles.html", selfcontained = F)
+```
+## Change background tile with leaflet and R
+
+```{r}
+
+
+# Load the library
+library(leaflet)
+
+# Note: if you do not already installed it, install it with:
+# install.packages("leaflet")
+
+# Background 1: NASA
+m <- leaflet() %>% 
+   addTiles() %>% 
+   setView( lng = 2.34, lat = 48.85, zoom = 5 ) %>% 
+   addProviderTiles("NASAGIBS.ViirsEarthAtNight2012")
+m
+ 
+# Background 2: World Imagery
+m <- leaflet() %>% 
+   addTiles() %>% 
+   setView( lng = 2.34, lat = 48.85, zoom = 3 ) %>% 
+   addProviderTiles("Esri.WorldImagery")
+m
+
+# Background 2: World Imagery
+m <- leaflet() %>% 
+   addTiles() %>% 
+   setView( lng = 2.34, lat = 48.85, zoom = 3 ) %>% 
+   addProviderTiles("Esri.WorldGrayCanvas")
+m
+
+
+# Background 2: World Imagery
+m <- leaflet() %>% 
+   addTiles() %>% 
+   setView( lng = 2.34, lat = 48.85, zoom = 3 ) %>% 
+   addProviderTiles("Esri.WorldTerrain")
+m
+
+
+# Background 2: World Imagery
+m <- leaflet() %>% 
+   addTiles() %>% 
+   setView( lng = 2.34, lat = 48.85, zoom = 3 ) %>% 
+   addProviderTiles("Esri.WorldTopoMap")
+m
+
+
+# save the widget in a html file if needed.
+# library(htmlwidgets)
+# saveWidget(m, file=paste0( getwd(), "/HtmlWidget/backgroundMapTile.html", width="1000px"))
+
+
+```
+
+# List of tiles
+
+Many tiles are made available. A complete list can be found. Most famous are probably:
+
+https://leaflet-extras.github.io/leaflet-providers/preview/index.html
+
+    Nasa: NASAGIBS.ViirsEarthAtNight2012
+    Google map: Esri.WorldImagery
+    Gray: Esri.WorldGrayCanvas
+    Terrain: Esri.WorldTerrain
+    Topo Map: Esri.WorldTopoMap
+    
+  
+  
