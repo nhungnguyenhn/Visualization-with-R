@@ -1,0 +1,441 @@
+---
+title: "Map_Choropleth"
+author: "Nhung Nguyen"
+date: "2024-09-02"
+output: html_document
+---
+
+Choropleth map with ggplot2
+
+
+```{r}
+# Geospatial data available at the geojson format
+tmp_geojson <- tempfile(fileext = ".geojson")
+
+download.file(
+  "https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/communes.geojson",
+  tmp_geojson
+)
+library(sf)
+my_sf <- read_sf(tmp_geojson)
+
+# Since it is a bit too much data, I select only a subset of it:
+my_sf <- my_sf[substr(my_sf$code, 1, 2) %in% c(
+  "06", "83",
+  "13", "30", "34", "11", "66"
+), ]
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(my_sf) +
+  geom_sf(fill = "white", color = "black", linewidth = 0.3) +
+  theme_void()
+```
+
+Read the numeric variable
+
+```{r}
+# read data
+data <- read.table(
+  "https://raw.githubusercontent.com/holtzy/R-graph-gallery/master/DATA/data_on_french_states.csv",
+  header = T, sep = ";"
+)
+
+head(data)
+```
+
+```{r}
+# Distribution of the number of restaurant?
+library(dplyr)
+data %>%
+  ggplot(aes(x = nb_equip)) +
+  geom_histogram(bins = 10, fill = "skyblue", color = "black") +
+  scale_x_log10()
+```
+Merge geospatial and numeric data
+
+```{r}
+# Make the merge
+my_sf_merged <- my_sf %>%
+  left_join(data, by = c("code" = "depcom")) %>%
+  # Note that if the number of restaurant is NA, it is in fact 0
+  mutate(nb_equip = ifelse(is.na(nb_equip), 0.01, nb_equip))
+```
+
+
+Read the numeric variable
+
+
+```{r}
+ggplot(my_sf_merged) +
+  geom_sf(aes(fill = nb_equip)) +
+  theme_void()
+```
+Customized choropleth map with R and ggplot2
+
+```{r}
+
+p <- ggplot(my_sf_merged) +
+  geom_sf(aes(fill = nb_equip), linewidth = 0, alpha = 0.9) +
+  theme_void() +
+  scale_fill_viridis_c(
+    trans = "log", breaks = c(1, 5, 10, 20, 50, 100),
+    name = "Number of restaurant",
+    guide = guide_legend(
+      keyheight = unit(3, units = "mm"),
+      keywidth = unit(12, units = "mm"),
+      label.position = "bottom",
+      title.position = "top",
+      nrow = 1
+    )
+  ) +
+  labs(
+    title = "South of France Restaurant concentration",
+    subtitle = "Number of restaurant per city district",
+    caption = "Data: INSEE | Creation: Yan Holtz | r-graph-gallery.com"
+  ) +
+  theme(
+    text = element_text(color = "#22211d"),
+    plot.background = element_rect(fill = "#f5f5f2", color = NA),
+    panel.background = element_rect(fill = "#f5f5f2", color = NA),
+    legend.background = element_rect(fill = "#f5f5f2", color = NA),
+    plot.title = element_text(
+      size = 20, hjust = 0.01, color = "#4e4d47",
+      margin = margin(
+        b = -0.1, t = 0.4, l = 2,
+        unit = "cm"
+      )
+    ),
+    plot.subtitle = element_text(
+      size = 15, hjust = 0.01,
+      color = "#4e4d47",
+      margin = margin(
+        b = -0.1, t = 0.43, l = 2,
+        unit = "cm"
+      )
+    ),
+    plot.caption = element_text(
+      size = 10,
+      color = "#4e4d47",
+      margin = margin(
+        b = 0.3, r = -99, t = 0.3,
+        unit = "cm"
+      )
+    ),
+    legend.position = c(0.7, 0.09)
+  )
+
+p
+
+```
+
+Choropleth map with ggiraph
+
+```{r}
+library(ggiraph) # install.packages('ggiraph')
+library(ggplot2) # install.packages('ggplot2')
+library(dplyr) # install.packages('dplyr')
+library(patchwork) # install.packages('patchwork')
+library(tidyr) # install.packages('tidyr')
+library(sf) # install.packages('sf')
+set.seed(123)
+```
+
+Most simple example
+
+```{r}
+data(mtcars)
+mtcars$car <- rownames(mtcars)
+
+# data_id in the aes mapping
+p1 <- ggplot(mtcars, aes(wt, mpg, tooltip = car, data_id = car)) +
+  geom_point_interactive(size = 4)
+
+# data_id in the aes mapping
+p2 <- ggplot(mtcars, aes(x = reorder(car, mpg), y = mpg, tooltip = car, data_id = car)) +
+  geom_col_interactive() +
+  coord_flip()
+
+combined_plot <- p1 + p2 + plot_layout(ncol = 2)
+
+interactive_plot <- girafe(ggobj = combined_plot)
+#htmltools::save_html(interactive_plot, "HtmlWidget/multiple-ggiraph-1.html")
+```
+Customize charts as usual
+
+```{r}
+# Read the full world map
+world_sf <- read_sf("https://raw.githubusercontent.com/holtzy/R-graph-gallery/master/DATA/world.geojson")
+world_sf <- world_sf %>%
+  filter(!name %in% c("Antarctica", "Greenland"))
+
+# Create a sample dataset
+happiness_data <- data.frame(
+  Country = c(
+    "France", "Germany", "United Kingdom",
+    "Japan", "China", "Vietnam",
+    "United States of America", "Canada", "Mexico"
+  ),
+  Continent = c(
+    "Europe", "Europe", "Europe",
+    "Asia", "Asia", "Asia",
+    "North America", "North America", "North America"
+  ),
+  Happiness_Score = rnorm(mean = 30, sd = 20, n = 9),
+  GDP_per_capita = rnorm(mean = 30, sd = 20, n = 9),
+  Social_support = rnorm(mean = 30, sd = 20, n = 9),
+  Healthy_life_expectancy = rnorm(mean = 30, sd = 20, n = 9)
+)
+
+# Join the happiness data with the full world map
+world_sf <- world_sf %>%
+  left_join(happiness_data, by = c("name" = "Country"))
+```
+
+
+```{r}
+# Create the first chart (Scatter plot)
+p1 <- ggplot(world_sf, aes(
+  GDP_per_capita,
+  Happiness_Score,
+  tooltip = name,
+  data_id = name,
+  color = name
+)) +
+  geom_point_interactive(data = filter(world_sf, !is.na(Happiness_Score)), size = 4) +
+  theme_minimal() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
+
+# Create the second chart (Bar plot)
+p2 <- ggplot(world_sf, aes(
+  x = reorder(name, Happiness_Score),
+  y = Happiness_Score,
+  tooltip = name,
+  data_id = name,
+  fill = name
+)) +
+  geom_col_interactive(data = filter(world_sf, !is.na(Happiness_Score))) +
+  coord_flip() +
+  theme_minimal() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
+
+# Create the third chart (choropleth)
+p3 <- ggplot() +
+  geom_sf(data = world_sf, fill = "lightgrey", color = "lightgrey") +
+  geom_sf_interactive(
+    data = filter(world_sf, !is.na(Happiness_Score)),
+    aes(fill = name, tooltip = name, data_id = name)
+  ) +
+  coord_sf(crs = st_crs(3857)) +
+  theme_void() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
+
+# Combine the plots
+combined_plot <- (p1 + p2) / p3 + plot_layout(heights = c(1, 2))
+
+# Create the interactive plot
+interactive_plot <- girafe(ggobj = combined_plot)
+interactive_plot <- girafe_options(
+  interactive_plot,
+  opts_hover(css = "fill:red;stroke:black;")
+)
+
+interactive_plot
+
+# save as an html widget
+#htmltools::save_html(interactive_plot, "HtmlWidget/multiple-ggiraph-2.html")
+```
+
+Highlight all the items of a group
+
+```{r}
+# Create the first chart (Scatter plot)
+p1 <- ggplot(world_sf, aes(
+  GDP_per_capita,
+  Happiness_Score,
+  tooltip = name,
+  data_id = Continent,
+  color = Continent
+)) +
+  geom_point_interactive(data = filter(world_sf, !is.na(Happiness_Score)), size = 4) +
+  theme_minimal() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
+
+# Create the second chart (Bar plot)
+p2 <- ggplot(world_sf, aes(
+  x = reorder(name, Happiness_Score),
+  y = Happiness_Score,
+  tooltip = name,
+  data_id = Continent,
+  fill = Continent
+)) +
+  geom_col_interactive(data = filter(world_sf, !is.na(Happiness_Score))) +
+  coord_flip() +
+  theme_minimal() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
+
+# Create the third chart (choropleth)
+p3 <- ggplot() +
+  geom_sf(data = world_sf, fill = "lightgrey", color = "lightgrey") +
+  geom_sf_interactive(
+    data = filter(world_sf, !is.na(Happiness_Score)),
+    aes(fill = Continent, tooltip = name, data_id = Continent)
+  ) +
+  coord_sf(crs = st_crs(3857)) +
+  theme_void() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
+
+# Combine the plots
+combined_plot <- (p1 + p2) / p3 + plot_layout(heights = c(1, 2))
+
+# Create the interactive plot
+interactive_plot <- girafe(ggobj = combined_plot)
+interactive_plot <- girafe_options(
+  interactive_plot,
+  opts_hover(css = "fill:red;stroke:black;")
+)
+interactive_plot
+# Save the interactive plot
+#htmltools::save_html(interactive_plot, "HtmlWidget/multiple-ggiraph-3.html")
+```
+Customise hover effect with CSS
+
+```{r}
+tooltip_css <- "
+  border-radius: 12px;
+  color: #333;
+  background-color: white;
+  padding: 10px;
+  font-size: 14px;
+"
+
+hover_css <- "
+  filter: brightness(75%);
+  transition: all 0.3s ease;
+"
+
+# Add interactivity
+interactive_plot <- interactive_plot %>%
+  girafe_options(
+    opts_hover(css = hover_css),
+    opts_tooltip(css = tooltip_css)
+  )
+interactive_plot
+
+# Save the interactive plot
+#htmltools::save_html(interactive_plot, "HtmlWidget/multiple-ggiraph-4.html")
+```
+More complex CSS
+Since CSS allows a super high level of customization, we can use it to create way more complex and advanced examples!
+
+In the following case:
+
+Tooltip CSS:
+
+    background: Creates a gradient from light gray to slightly darker gray
+    border: Removes any border
+    border-radius: Rounds the corners of the tooltip
+    box-shadow: Adds a subtle 3D effect with light and shadow
+    color: Sets the text color to dark gray
+    font-family: Specifies the font types to use
+    font-size: Sets the text size
+    padding: Adds space inside the tooltip
+    transition: Enables smooth changes in properties over 0.5 seconds
+
+Hover CSS:
+
+    filter: brightness(75%): Makes the element darker
+    stroke: Adds a light blue outline
+    stroke-width: Sets the thickness of the outline
+    cursor: Changes the mouse cursor to a pointing hand
+    filter: Increases brightness and adds a soft glow effect
+    transition: Enables smooth changes in properties over 0.5 seconds
+    
+    
+```{r}
+tooltip_css <- "
+  background: linear-gradient(145deg, #f0f0f0, #e6e6e6);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 3px 3px 10px #d1d1d1, -3px -3px 10px #ffffff;
+  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  padding: 12px;
+  transition: all 0.5s ease-out;
+"
+
+hover_css <- "
+  filter: brightness(75%);
+  cursor: pointer;
+  filter: brightness(1.2) drop-shadow(0 0 5px rgba(78, 84, 200, 0.5));
+  transition: all 0.5s ease-out;
+"
+
+# Add interactivity
+interactive_plot <- interactive_plot %>%
+  girafe_options(
+    opts_hover(css = hover_css),
+    opts_tooltip(css = tooltip_css)
+  )
+interactive_plot
+# Save the interactive plot
+#htmltools::save_html(interactive_plot, "HtmlWidget/multiple-ggiraph-5.html")
+```
+Hide the groups: more hover effects
+```{r}
+tooltip_css <- "
+  border-radius: 12px;
+  color: #333;
+  background-color: white;
+  padding: 10px;
+  font-size: 14px;
+  transition: all 0.5s ease-out;
+"
+
+hover_css <- "
+  filter: brightness(75%);
+  cursor: pointer;
+  transition: all 0.5s ease-out;
+  filter: brightness(1.15);
+"
+
+# Add interactivity
+interactive_plot <- interactive_plot %>%
+  girafe_options(
+    opts_hover(css = hover_css),
+    opts_tooltip(css = tooltip_css),
+    opts_hover_inv(css = "opacity:0.3; transition: all 0.2s ease-out;")
+  )
+interactive_plot
+# Save the interactive plot
+#htmltools::save_html(interactive_plot, "HtmlWidget/multiple-ggiraph-6.html")
+```
+https://r-graph-gallery.com/414-map-multiple-charts-in-ggiraph.html
+
