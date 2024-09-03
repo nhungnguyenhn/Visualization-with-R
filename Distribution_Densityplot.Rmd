@@ -1,0 +1,267 @@
+---
+title: "Distribution_Densityplot"
+output: html_document
+date: "2024-09-03"
+---
+
+
+```{r}
+
+# Define APA theme
+theme_apa <- function(base_size = 12, base_family = "serif") {
+  theme_classic(base_size = base_size, base_family = base_family) +
+    theme(
+      # Title and subtitle
+      plot.title = element_text(face = "bold", size = base_size * 1.2, hjust = 0.5),
+      plot.subtitle = element_text(size = base_size, hjust = 0.5),
+      
+      # Axis titles and text
+      axis.title = element_text(size = base_size * 1.1),
+      axis.text = element_text(size = base_size),
+      axis.line = element_line(color = "black"),
+      axis.ticks = element_line(color = "black"),
+      
+      # Panel and background
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      
+      # Legend
+      legend.title = element_text(size = base_size),
+      legend.text = element_text(size = base_size),
+      legend.position = "bottom",
+      legend.key = element_blank()
+    )
+}
+```
+
+
+
+## Basic plot
+
+```{r}
+
+
+# Libraries
+library(ggplot2)
+library(dplyr)
+
+# Load dataset from github
+data <- read.table("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/1_OneNum.csv", header=TRUE)
+
+# Make the histogram
+data %>%
+  filter( price<300 ) %>%
+  ggplot( aes(x=price)) +
+    geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8) + theme_apa()
+
+
+```
+Custom with theme_ipsum
+
+```{r}
+
+
+# Libraries
+library(ggplot2)
+library(dplyr)
+library(hrbrthemes)
+
+# Load dataset from github
+data <- read.table("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/1_OneNum.csv", header=TRUE)
+
+# Make the histogram
+data %>%
+  filter( price<300 ) %>%
+  ggplot( aes(x=price)) +
+    geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8) +
+    ggtitle("Night price distribution of Airbnb appartements") +
+    theme_ipsum()
+
+
+```
+## Density with geom_density
+
+```{r}
+# Libraries
+library(ggplot2)
+library(hrbrthemes)
+
+# Dummy data
+data <- data.frame(
+  var1 = rnorm(1000),
+  var2 = rnorm(1000, mean=2)
+)
+
+# Chart
+p <- ggplot(data, aes(x=x) ) +
+  # Top
+  geom_density( aes(x = var1, y = ..density..), fill="#69b3a2" ) +
+  geom_label( aes(x=4.5, y=0.25, label="variable1"), color="#69b3a2") +
+  # Bottom
+  geom_density( aes(x = var2, y = -..density..), fill= "#404080") +
+  geom_label( aes(x=4.5, y=-0.25, label="variable2"), color="#404080") +
+  theme_apa() +
+  xlab("value of x")
+
+p
+```
+## Histogram with geom_histogram
+
+
+```{r}
+
+
+# Chart
+p <- ggplot(data, aes(x=x) ) +
+  geom_histogram( aes(x = var1, y = ..density..), fill="#69b3a2" ) +
+  geom_label( aes(x=4.5, y=0.25, label="variable1"), color="#69b3a2") +
+  geom_histogram( aes(x = var2, y = -..density..), fill= "#404080") +
+  geom_label( aes(x=4.5, y=-0.25, label="variable2"), color="#404080") +
+  theme_apa()
+  xlab("value of x")
+
+p
+
+
+```
+
+## Multi density chart
+
+```{r}
+
+
+# Libraries
+library(ggplot2)
+library(hrbrthemes)
+library(dplyr)
+library(tidyr)
+library(viridis)
+
+# The diamonds dataset is natively available with R.
+
+# Without transparency (left)
+p1 <- ggplot(data=diamonds, aes(x=price, group=cut, fill=cut)) +
+    geom_density(adjust=1.5) +
+    theme_apa()
+p1
+
+# With transparency (right)
+p2 <- ggplot(data=diamonds, aes(x=price, group=cut, fill=cut)) +
+    geom_density(adjust=1.5, alpha=.4) +
+    theme_apa()
+p2
+
+
+```
+
+
+
+```{r}
+# Load dataset from github
+data <- read.table("https://raw.githubusercontent.com/zonination/perceptions/master/probly.csv", header=TRUE, sep=",")
+data <- data %>%
+  gather(key="text", value="value") %>%
+  mutate(text = gsub("\\.", " ",text)) %>%
+  mutate(value = round(as.numeric(value),0))
+
+# A dataframe for annotations
+annot <- data.frame(
+  text = c("Almost No Chance", "About Even", "Probable", "Almost Certainly"),
+  x = c(5, 53, 65, 79),
+  y = c(0.15, 0.4, 0.06, 0.1)
+)
+
+# Plot
+data %>%
+  filter(text %in% c("Almost No Chance", "About Even", "Probable", "Almost Certainly")) %>%
+  ggplot( aes(x=value, color=text, fill=text)) +
+    geom_density(alpha=0.6) +
+    scale_fill_viridis(discrete=TRUE) +
+    scale_color_viridis(discrete=TRUE) +
+    geom_text( data=annot, aes(x=x, y=y, label=text, color=text), hjust=0, size=4.5) +
+    theme_apa() +
+    theme(
+      legend.position="none"
+    ) +
+    ylab("") +
+    xlab("Assigned Probability (%)")
+
+
+```
+
+## Small Multiple with facet_wrap()
+
+```{r}
+
+
+# Using Small multiple
+ggplot(data=diamonds, aes(x=price, group=cut, fill=cut)) +
+    geom_density(adjust=1.5) +
+    theme_ipsum() +
+    facet_wrap(~cut) +
+    theme(
+      legend.position="none",
+      panel.spacing = unit(0.1, "lines"),
+      axis.ticks.x=element_blank()
+    ) + theme_apa()
+```
+
+## Stacked density chart
+```{r}
+# Stacked density plot:
+p <- ggplot(data=diamonds, aes(x=price, group=cut, fill=cut)) +
+    geom_density(adjust=1.5, position="fill") +
+    theme_apa()
+p
+
+
+```
+
+
+## Density plot with labels on lines
+
+```{r}
+# Install the packages if not already done
+# install.packages("ggplot2")
+# install.packages("geomtextpath")
+
+# Load the package
+library(ggplot2)
+library(geomtextpath)
+```
+
+
+## Default density chart in ggplot2
+
+```{r}
+library(hrbrthemes)
+data(iris)
+
+ggplot(iris, aes(x = Sepal.Length, fill = Species, label = Species)) +
+  geom_density() + theme_apa()
+```
+
+
+```{r}
+library(hrbrthemes)
+data(iris)
+
+ggplot(iris, aes(x = Sepal.Length, colour = Species, label = Species)) +
+  geom_textdensity() +
+  theme_bw() + guides(color = 'none') + theme_apa()
+```
+
+## Change texts properties
+
+```{r}
+library(hrbrthemes)
+data(mtcars)
+
+mtcars$labels = ifelse(mtcars$vs==0, "Type 0", "Type 1")
+ggplot(mtcars, aes(x = qsec, colour = as.factor(labels), label = as.factor(labels))) +
+  geom_textdensity(size = 6, fontface = 4, # size of 6, bold italic
+                   vjust = -0.4, hjust = "ymid") +
+  theme_apa() + guides(color = 'none')
+```
+
