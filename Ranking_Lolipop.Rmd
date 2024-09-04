@@ -1,0 +1,427 @@
+---
+title: "Ranking_Lolipop"
+output: html_document
+date: "2024-09-04"
+---
+
+# Define APA theme
+```{r}
+theme_apa <- function(base_size = 12, base_family = "serif") {
+  theme_classic(base_size = base_size, base_family = base_family) +
+    theme(
+      # Title and subtitle
+      plot.title = element_text(face = "bold", size = base_size * 1.2, hjust = 0.5),
+      plot.subtitle = element_text(size = base_size, hjust = 0.5),
+      
+      # Axis titles and text
+      axis.title = element_text(size = base_size * 1.1),
+      axis.text = element_text(size = base_size),
+      axis.line = element_line(color = "black"),
+      axis.ticks = element_line(color = "black"),
+      
+      # Panel and background
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      
+      # Legend
+      legend.title = element_text(size = base_size),
+      legend.text = element_text(size = base_size),
+      legend.position = "bottom",
+      legend.key = element_blank()
+    )
+}
+```
+
+
+## From 2 numeric variables
+
+```{r}
+
+
+# Libraries
+library(ggplot2)
+
+# Create data
+data <- data.frame(x=seq(1,30), y=abs(rnorm(30)))
+ 
+# Plot
+ggplot(data, aes(x=x, y=y)) +
+  geom_point() + 
+  geom_segment( aes(x=x, xend=x, y=0, yend=y)) +theme_apa()
+```
+
+
+
+## From 1 numeric and 1 categorical variable 
+```{r}
+ 
+
+# Libraries
+library(ggplot2)
+
+# Create data
+data <- data.frame(
+  x=LETTERS[1:26], 
+  y=abs(rnorm(26))
+)
+ 
+# Plot
+ggplot(data, aes(x=x, y=y)) +
+  geom_point() + 
+  geom_segment( aes(x=x, xend=x, y=0, yend=y)) +theme_apa()
+
+
+```
+
+## Marker
+
+```{r}
+
+
+# Library
+library(tidyverse)
+ 
+# Create data
+data <- data.frame(
+  x=LETTERS[1:26],
+  y=abs(rnorm(26))
+)
+ 
+# plot
+ggplot(data, aes(x=x, y=y)) +
+  geom_segment( aes(x=x, xend=x, y=0, yend=y)) +
+  geom_point( size=5, color="red", fill=alpha("orange", 0.3), alpha=0.7, shape=21, stroke=2)  + theme_apa()
+
+
+```
+
+## General appearance with theme()
+
+```{r}
+
+
+# Libraries
+library(ggplot2)
+
+# Create data
+data <- data.frame(
+  x=LETTERS[1:26],
+  y=abs(rnorm(26))
+)
+
+# Plot
+ggplot(data, aes(x=x, y=y)) +
+  geom_segment( aes(x=x, xend=x, y=0, yend=y), color="grey") +
+  geom_point( color="orange", size=4) +
+  theme_light() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank(),
+    axis.ticks.x = element_blank()
+  ) +  theme_apa() +
+  xlab("") + 
+  ylab("Value of Y")
+
+
+```
+
+
+#Horizontal version
+
+```{r}
+
+
+# Libraries
+library(ggplot2)
+
+# Create data
+data <- data.frame(
+  x=LETTERS[1:26],
+  y=abs(rnorm(26))
+)
+
+# Horizontal version
+ggplot(data, aes(x=x, y=y)) +
+  geom_segment( aes(x=x, xend=x, y=0, yend=y), color="skyblue") +
+  geom_point( color="blue", size=4, alpha=0.6) +
+  theme_light() +  theme_apa() +
+  coord_flip() +
+  theme(
+    panel.grid.major.y = element_blank(),
+    panel.border = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+
+
+```
+
+
+```{r}
+
+
+# Libraries
+library(ggplot2)
+
+# Create data
+data <- data.frame(
+  x=LETTERS[1:26],
+  y=abs(rnorm(26))
+)
+
+# Change baseline
+ggplot(data, aes(x=x, y=y)) +
+  geom_segment( aes(x=x, xend=x, y=1, yend=y), color="grey") +
+  geom_point( color="orange", size=4) +
+  theme_light() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank(),
+    axis.ticks.x = element_blank()
+  )  + theme_apa() +
+  xlab("") +
+  ylab("Value of Y")
+
+```
+
+## Reorder a variable with ggplot2
+
+```{r}
+# Library
+library(ggplot2)
+library(dplyr)
+
+# Dataset 1: one value per group
+data <- data.frame(
+  name=c("north","south","south-east","north-west","south-west","north-east","west","east"),
+  val=sample(seq(1,10), 8 )
+)
+ 
+# Dataset 2: several values per group (natively provided in R)
+# mpg
+```
+
+
+
+## Method 1: the forcats library
+
+```{r}
+# load the library
+library(forcats)
+
+# Reorder following the value of another column:
+data %>%
+  mutate(name = fct_reorder(name, val)) %>%
+  ggplot( aes(x=name, y=val)) +
+    geom_bar(stat="identity", fill="#f68060", alpha=.6, width=.4) +
+    coord_flip() +  
+    xlab("") +
+   theme_apa()
+ 
+# Reverse side
+data %>%
+  mutate(name = fct_reorder(name, desc(val))) %>%
+  ggplot( aes(x=name, y=val)) +
+    geom_bar(stat="identity", fill="#f68060", alpha=.6, width=.4) +
+    coord_flip() +
+    xlab("") +
+   theme_apa() 
+```
+
+```{r}
+# Using median
+mpg %>%
+  mutate(class = fct_reorder(class, hwy, .fun='median')) %>%
+  ggplot( aes(x=reorder(class, hwy), y=hwy, fill=class)) + 
+    geom_boxplot() +
+    xlab("class") +
+    theme(legend.position="none")  + theme_apa() +
+    xlab("")
+ 
+# Using number of observation per group
+mpg %>%
+  mutate(class = fct_reorder(class, hwy, .fun='length' )) %>%
+  ggplot( aes(x=class, y=hwy, fill=class)) + 
+    geom_boxplot() +
+    xlab("class") +
+    theme(legend.position="none") + theme_apa() +
+    xlab("") +
+    xlab("")
+```
+#using based R
+
+```{r}
+# Reorder following a precise order
+p <- data %>%
+  mutate(name = fct_relevel(name, 
+            "north", "north-east", "east", 
+            "south-east", "south", "south-west", 
+            "west", "north-west")) %>%
+  ggplot( aes(x=name, y=val)) +
+    geom_bar(stat="identity") + theme_apa() +
+    xlab("")
+p
+```
+
+
+## Method 2: using dplyr only
+
+```{r}
+data %>%
+  arrange(val) %>%    # First sort by val. This sort the dataframe but NOT the factor levels
+  mutate(name=factor(name, levels=name)) %>%   # This trick update the factor levels
+  ggplot( aes(x=name, y=val)) +
+    geom_segment( aes(xend=name, yend=0)) +
+    geom_point( size=4, color="orange") +
+    coord_flip() +
+    theme_bw() + theme_apa() +
+    xlab("")
+ 
+data %>%
+  arrange(val) %>%
+  mutate(name = factor(name, levels=c("north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"))) %>%
+  ggplot( aes(x=name, y=val)) +
+    geom_segment( aes(xend=name, yend=0)) +
+    geom_point( size=4, color="orange") +
+    theme_bw() + theme_apa() +
+    xlab("")
+```
+
+## Method 3: the reorder() function of base R
+
+```{r}
+# reorder is close to order, but is made to change the order of the factor levels.
+mpg$class = with(mpg, reorder(class, hwy, median))
+
+p <- mpg %>%
+  ggplot( aes(x=class, y=hwy, fill=class)) + 
+    geom_violin() + theme_apa() +
+    xlab("class") +
+    theme(legend.position="none") +
+    xlab("")
+p
+```
+
+## Lollipop chart with 2 groups
+
+```{r}
+
+
+# Library
+library(ggplot2)
+library(dplyr)
+library(hrbrthemes)
+
+# Create data
+value1 <- abs(rnorm(26))*2
+data <- data.frame(
+  x=LETTERS[1:26], 
+  value1=value1, 
+  value2=value1+1+rnorm(26, sd=1) 
+)
+ 
+# Reorder data using average? Learn more about reordering in chart #267
+data <- data %>% 
+  rowwise() %>% 
+  mutate( mymean = mean(c(value1,value2) )) %>% 
+  arrange(mymean) %>% 
+  mutate(x=factor(x, x))
+ 
+# Plot
+ggplot(data) +
+  geom_segment( aes(x=x, xend=x, y=value1, yend=value2), color="grey") +
+  geom_point( aes(x=x, y=value1), color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
+  geom_point( aes(x=x, y=value2), color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
+  coord_flip()+
+  theme(
+    legend.position = "none",
+  ) + theme_apa() + 
+  xlab("") +
+  ylab("Value of Y")
+
+
+```
+
+
+## Highlight a group in a lollipop chart
+
+```{r}
+library(dplyr)
+library(hrbrthemes)
+
+# Create data
+set.seed(1000)
+data <- data.frame(
+  x=LETTERS[1:26], 
+  y=abs(rnorm(26))
+)
+ 
+# Reorder the data
+data <- data %>%
+  arrange(y) %>%
+  mutate(x=factor(x,x))
+  
+# Plot
+p <- ggplot(data, aes(x=x, y=y)) +
+  geom_segment(
+    aes(x=x, xend=x, y=0, yend=y), 
+    color=ifelse(data$x %in% c("A","D"), "orange", "grey"), 
+    size=ifelse(data$x %in% c("A","D"), 1.3, 0.7)
+  ) +
+  geom_point(
+    color=ifelse(data$x %in% c("A","D"), "orange", "grey"), 
+    size=ifelse(data$x %in% c("A","D"), 5, 2)
+  ) +
+  theme_apa() +
+  coord_flip() +
+  theme(
+    legend.position="none"
+  ) +
+  xlab("") +
+  ylab("Value of Y") +
+  ggtitle("How did groups A and D perform?")
+
+# Add annotation
+p + annotate("text", x=grep("D", data$x), y=data$y[which(data$x=="D")]*1.2, 
+           label="Group D is very impressive", 
+           color="orange", size=4 , angle=0, fontface="bold", hjust=0) + 
+  
+    annotate("text", x = grep("A", data$x), y = data$y[which(data$x=="A")]*1.2, 
+           label = paste("Group A is not too bad\n (val=",data$y[which(data$x=="A")] %>% round(2),")",sep="" ) , 
+           color="orange", size=4 , angle=0, fontface="bold", hjust=0) 
+```
+
+## Marker 
+
+```{r}
+
+
+# library
+library(ggplot2)
+library(dplyr)
+
+# Create data (this takes more sense with a numerical X axis)
+x <- seq(0, 2*pi, length.out=100)
+data <- data.frame(
+  x=x, 
+  y=sin(x) + rnorm(100, sd=0.2)
+)
+ 
+# Add a column with your condition for the color
+data <- data %>% 
+  mutate(mycolor = ifelse(y>0, "type1", "type2"))
+ 
+# plot
+ggplot(data, aes(x=x, y=y)) +
+  geom_segment( aes(x=x, xend=x, y=0, yend=y, color=mycolor), size=1.3, alpha=0.9) +
+  theme_light() + theme_apa()
+  theme(
+    legend.position = "none",
+    panel.border = element_blank(),
+  ) +
+  xlab("") +
+  ylab("Value of Y")
+
+
+```
+
